@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FourRoosters</string>
+    <string name="how_to_play">In the game, you need to guess the number that the artificial intelligence intended. Ten attempts you are given. Each time you will receive hints. A \"rooster\" means that you have guessed the number, and it is in the right position. A \"chicken\" means you have the right number, but it is in the wrong spot. Everything is very simple!</string>
+
+</resources>
