@@ -14,9 +14,7 @@ import com.braze.fourroosters.ui.theme.lightGray
 import com.braze.fourroosters.ui.theme.orange
 
 @Composable
-fun TopBar(ssn: MutableState<Array<String?>>,
-           showDialog: MutableState<Boolean>
-            ) {
+fun TopBar(showDialog: MutableState<Boolean>) {
     TopAppBar(
         elevation = 4.dp,
         title = {
@@ -31,4 +29,3 @@ fun TopBar(ssn: MutableState<Array<String?>>,
             }
         })
 }
-

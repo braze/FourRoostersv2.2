@@ -1,137 +1,120 @@
 package com.braze.fourroosters.ui
 
-import android.app.AlertDialog
-import android.content.ContentValues.TAG
-import android.util.Log
-import androidx.compose.runtime.*
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.braze.fourroosters.model.Game
-import com.braze.fourroosters.model.GameData
+import com.braze.fourroosters.domain.Game
+import com.braze.fourroosters.domain.UIEvent
 import com.braze.fourroosters.ui.BoxStateColor.*
-import dagger.hilt.android.lifecycle.HiltViewModel
 
-//@HiltViewModel
+
 class MainActivityViewModel : ViewModel() {
 
-    private val playGame = Game()
-    private val game = GameData(
-        listOfDescriptions = listOf(),
-        secretNumber = arrayOfNulls(4),
-        guessNumber = arrayOf("X", "X", "X", "X"),
-        boxBorderColors = arrayOf(PASSIVE, PASSIVE, PASSIVE, PASSIVE),
-        buttonState = arrayOf(
-            true, true, true, true, true, true, true, true, true,
-            true, false, false
-        )
-    )
+    private val game = Game()
 
     val guessNumber: MutableState<Array<String>> = mutableStateOf(game.guessNumber)
     val buttonState: MutableState<Array<Boolean>> = mutableStateOf(game.buttonState)
     val boxBorderColors: MutableState<Array<BoxStateColor>> = mutableStateOf(game.boxBorderColors)
     val listOfDescriptions: MutableState<List<String>> = mutableStateOf(game.listOfDescriptions)
-    val secretNumber: MutableState<Array<String?>> = mutableStateOf(game.secretNumber)
+
     val winDialog: MutableState<Boolean> = mutableStateOf(false)
     val lostDialog: MutableState<Boolean> = mutableStateOf(false)
     val howToPlayDialogWindow: MutableState<Boolean> = mutableStateOf(false)
 
-
-    fun onUpdateBoxBorderColor(
-        pos: Int,
-        boxBorderColors: MutableState<Array<BoxStateColor>>,
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>,
-        secretNumber: MutableState<Array<String?>>
-    ) {
-        if (!secretNumber.value.contentEquals(guessNumber.value)) {
-            when (pos) {
-                0 -> {
-                    boxBorderColors.value = arrayOf(ACTIVE, PASSIVE, PASSIVE, PASSIVE)
-                }
-                1 -> {
-                    boxBorderColors.value = arrayOf(PASSIVE, ACTIVE, PASSIVE, PASSIVE)
-                }
-                2 -> {
-                    boxBorderColors.value = arrayOf(PASSIVE, PASSIVE, ACTIVE, PASSIVE)
-                }
-                3 -> {
-                    boxBorderColors.value = arrayOf(PASSIVE, PASSIVE, PASSIVE, ACTIVE)
-                }
-                else -> {
-                    boxBorderColors.value = arrayOf(PASSIVE, PASSIVE, PASSIVE, PASSIVE)
-                }
+    fun onEvent(event: UIEvent) {
+        when(event) {
+            is UIEvent.ShowHowToPlayDialog -> {
+                howToPlayDialogWindow.value = event.wantToShow
             }
-            onActivateDeleteButton(pos, guessNumber, buttonState)
+            is UIEvent.ShowWinDialog -> {
+                winDialog.value = event.wantToShow
+            }
+            is UIEvent.ShowLostDialog -> {
+                lostDialog.value = event.wantToShow
+            }
+            is UIEvent.NewGame -> {
+                newGame()
+            }
+            is UIEvent.EndOfTheGame -> {
+                onTheGameEnds()
+                lostDialog.value = false
+                winDialog.value = false
+            }
         }
     }
 
-    fun onNumberButtonClick(
-        number: Int,
-        boxBorderColors: MutableState<Array<BoxStateColor>>,
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>,
-        secretNumber: MutableState<Array<String?>>
-    ) {
-        val pos = getHighLightedBox(boxBorderColors.value)
-        if (pos != -1) {
-            guessNumber.value[pos] = number.toString()
-            guessNumber.value = arrayOf(
-                guessNumber.value[0],
-                guessNumber.value[1],
-                guessNumber.value[2],
-                guessNumber.value[3]
-            )
-            onUpdateBoxBorderColor(-1, boxBorderColors, guessNumber, buttonState, secretNumber)
-            onDeactivateButtons(guessNumber, buttonState)
-            onActivateOkButton(guessNumber, buttonState)
+    fun onUpdateBoxBorderColor(position: Int) {
+        when (position) {
+            0 -> {
+                boxBorderColors.value[0] = ACTIVE
+                boxBorderColors.value[1] = PASSIVE
+                boxBorderColors.value[2] = PASSIVE
+                boxBorderColors.value[3] = PASSIVE
+            }
+            1 -> {
+                boxBorderColors.value[0] = PASSIVE
+                boxBorderColors.value[1] = ACTIVE
+                boxBorderColors.value[2] = PASSIVE
+                boxBorderColors.value[3] = PASSIVE
+            }
+            2 -> {
+                boxBorderColors.value[0] = PASSIVE
+                boxBorderColors.value[1] = PASSIVE
+                boxBorderColors.value[2] = ACTIVE
+                boxBorderColors.value[3] = PASSIVE
+            }
+            3 -> {
+                boxBorderColors.value[0] = PASSIVE
+                boxBorderColors.value[1] = PASSIVE
+                boxBorderColors.value[2] = PASSIVE
+                boxBorderColors.value[3] = ACTIVE
+            }
+            else -> {
+                boxBorderColors.value[0] = PASSIVE
+                boxBorderColors.value[1] = PASSIVE
+                boxBorderColors.value[2] = PASSIVE
+                boxBorderColors.value[3] = PASSIVE
+            }
+        }
+        onActivateDeleteButton(position)
+    }
+
+    fun onNumberButtonClick(number: Int) {
+        val position = getHighLightedBox()
+        if (position != -1) {
+            guessNumber.value[position] = number.toString()
+            onUpdateBoxBorderColor(-1)
+            onDeactivateButtons()
+            onActivateOkButton()
         }
     }
 
-    fun onDeletePressed(
-        boxBorderColors: MutableState<Array<BoxStateColor>>,
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>,
-        secretNumber: MutableState<Array<String?>>
-    ) {
-        val pos = getHighLightedBox(boxBorderColors.value)
-        if (pos != -1) {
-            guessNumber.value[pos] = "X"
-            guessNumber.value = arrayOf(
-                guessNumber.value[0],
-                guessNumber.value[1],
-                guessNumber.value[2],
-                guessNumber.value[3]
-            )
-            onUpdateBoxBorderColor(-1, boxBorderColors, guessNumber, buttonState, secretNumber)
-            onDeactivateButtons(guessNumber, buttonState)
+    fun onDeletePressed() {
+        val position = getHighLightedBox()
+        if (position != -1) {
+            guessNumber.value[position] = "X"
+            onUpdateBoxBorderColor(-1)
+            onDeactivateButtons()
         }
     }
 
-    fun onOkButtonPressed(
-        ssn: MutableState<Array<String?>>,
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>,
-        boxBorderColors: MutableState<Array<BoxStateColor>>,
-        listOfDescriptions: MutableState<List<String>>,
-        secretNumber: MutableState<Array<String?>>,
-        winDialog: MutableState<Boolean>,
-        lostDialog: MutableState<Boolean>
-    ) {
+    fun onOkButtonPressed() {
         //generate new game for the first time.
-        if (ssn.value.contains(null)) {
-            playGame.generateSecretNumber(ssn)
+        if (game.isSecretNumberNotReady()) {
+            game.generateSecretNumber()
         }
-        playGame.checkNumber(ssn, guessNumber, listOfDescriptions, winDialog,lostDialog)
-        resetViews(guessNumber, buttonState, boxBorderColors, secretNumber)
+        val (description, isWon) = game.checkNumber(guessNumber.value)
+        listOfDescriptions.value.plus(description.toString())
+        winDialog.value = isWon as Boolean
+
+        // check if player lost
+        if (listOfDescriptions.value.size == 10) {
+            lostDialog.value = true
+        }
+        resetViews()
     }
 
-    private fun getHighLightedBox(boxBorderColors: Array<BoxStateColor>): Int {
-        return boxBorderColors.indexOf(ACTIVE)
-    }
-
-    private fun onDeactivateButtons(
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>
-    ) {
+    private fun onDeactivateButtons() {
         val list: Array<Boolean> = arrayOf(
             true, true, true, true, true, true, true, true, true, true, false, false
         )
@@ -144,11 +127,7 @@ class MainActivityViewModel : ViewModel() {
         buttonState.value = list
     }
 
-    private fun onActivateDeleteButton(
-        pos: Int,
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>
-    ) {
+    private fun onActivateDeleteButton(pos: Int) {
         if (pos != -1 && guessNumber.value[pos] != "X") {
             val list: Array<Boolean> = arrayOf(
                 buttonState.value[0],
@@ -184,10 +163,7 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    private fun onActivateOkButton(
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>
-    ) {
+    private fun onActivateOkButton() {
         if (!guessNumber.value.contains("X")) {
             val list: Array<Boolean> = arrayOf(
                 buttonState.value[0],
@@ -223,29 +199,22 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    private fun resetViews(
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>,
-        boxBorderColors: MutableState<Array<BoxStateColor>>,
-        secretNumber: MutableState<Array<String?>>
-    ) {
+    private fun resetViews() {
         guessNumber.value = arrayOf("X", "X", "X", "X")
         buttonState.value = arrayOf(
             true, true, true, true, true, true, true, true, true, true,
             false, false
         )
-        onUpdateBoxBorderColor(-1, boxBorderColors, guessNumber, buttonState, secretNumber)
+        onUpdateBoxBorderColor(-1)
     }
 
-    fun newGame(
-        guessNumber: MutableState<Array<String>>,
-        buttonState: MutableState<Array<Boolean>>,
-        boxBorderColors: MutableState<Array<BoxStateColor>>,
-        listOfDescriptions: MutableState<List<String>>,
-        secretNumber: MutableState<Array<String?>>
-    ) {
-        listOfDescriptions.value = listOf()
-        playGame.generateSecretNumber(secretNumber)
+    private fun getHighLightedBox(): Int {
+        return boxBorderColors.value.indexOf(ACTIVE)
+    }
+
+    private fun newGame() {
+        listOfDescriptions.value = arrayListOf()
+        game.generateSecretNumber()
         guessNumber.value = arrayOf("X", "X", "X", "X")
         boxBorderColors.value = arrayOf(PASSIVE, PASSIVE, PASSIVE, PASSIVE)
         buttonState.value = arrayOf(
@@ -254,17 +223,11 @@ class MainActivityViewModel : ViewModel() {
         )
     }
 
-    fun onTheGameEnds(buttonState: MutableState<Array<Boolean>>,
-                      guessNumber: MutableState<Array<String>>,
-                      secretNumber: MutableState<Array<String?>>){
+    private fun onTheGameEnds() {
         val list: Array<Boolean> = arrayOf(
             false, false, false, false, false, false, false, false, false, false, false, false
         )
         buttonState.value = list
-        val one = if (secretNumber.value[0] != null ) secretNumber.value[0].toString() else "X"
-        val two = if (secretNumber.value[1] != null ) secretNumber.value[1].toString() else "X"
-        val three = if (secretNumber.value[2] != null ) secretNumber.value[2].toString() else "X"
-        val four = if (secretNumber.value[3] != null ) secretNumber.value[3].toString() else "X"
-        guessNumber.value = arrayOf(one, two, three, four)
+        guessNumber.value = game.getSecretNumber(listOfDescriptions.value.size)
     }
 }

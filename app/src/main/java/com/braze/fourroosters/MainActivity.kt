@@ -1,8 +1,8 @@
 package com.braze.fourroosters
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.mutableStateOf
@@ -11,11 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.braze.fourroosters.ui.BoxStateColor
 import com.braze.fourroosters.ui.MainActivityViewModel
 import com.braze.fourroosters.ui.components.DefaultSnackbar
 import com.braze.fourroosters.ui.components.HowToPlayDialogWindow
 import com.braze.fourroosters.ui.components.WinDialogWindow
-import com.braze.fourroosters.ui.components.util.LostDialogWindow
+import com.braze.fourroosters.ui.components.LostDialogWindow
 import com.braze.fourroosters.ui.components.util.SnackbarController
 import com.braze.fourroosters.ui.representation.*
 import com.braze.fourroosters.ui.theme.FourRoostersTheme
@@ -24,25 +25,26 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @ExperimentalMaterialApi
 @ExperimentalCoroutinesApi
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
-    private val showDialog = mutableStateOf(false)
-    private val snackbarController = SnackbarController(lifecycleScope)
+    private lateinit var viewModel: MainActivityViewModel
+    private val showDropDownDialog = mutableStateOf(false)
+    private val snackBarController = SnackbarController(lifecycleScope)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewModel = ViewModelProvider(this).get(MainActivityViewModel::class.java)
 
-        val guessNumber = viewModel.guessNumber
-        val boxBorderColors = viewModel.boxBorderColors
-        val buttonState = viewModel.buttonState
-        val listOfDescriptions = viewModel.listOfDescriptions
-        val ssn = viewModel.secretNumber
-        val winDialog = viewModel.winDialog
-        val lostDialog = viewModel.lostDialog
-        val howToPlayDialogWindow = viewModel.howToPlayDialogWindow
+        viewModel = ViewModelProvider(this)[MainActivityViewModel::class.java]
 
         setContent {
+            val guessNumber: Array<String> = viewModel.guessNumber.value
+            val buttonState: Array<Boolean> = viewModel.buttonState.value
+            val listOfDescriptions: List<String> = viewModel.listOfDescriptions.value
+            val boxBorderColors: Array<BoxStateColor> = viewModel.boxBorderColors.value
+            val winDialog = viewModel.winDialog.value
+            val lostDialog = viewModel.lostDialog.value
+            val howToPlayDialogWindow = viewModel.howToPlayDialogWindow.value
+
             FourRoostersTheme {
                 val scaffoldState = rememberScaffoldState(rememberDrawerState(DrawerValue.Open))
 
@@ -53,18 +55,13 @@ class MainActivity : ComponentActivity() {
                     },
                     // shout topBar
                     topBar = {
-                        TopBar(ssn, showDialog)
-                        if (showDialog.value) {
+                        TopBar(showDialog = showDropDownDialog)
+                        if (showDropDownDialog.value) {
                             ShowDropDownMenu(
-                                showDialog,
-                                snackbarController,
-                                scaffoldState,
-                                guessNumber,
-                                buttonState,
-                                boxBorderColors,
-                                listOfDescriptions,
-                                ssn,
-                                howToPlayDialogWindow
+                                showDialog = showDropDownDialog,
+                                snackbarController = snackBarController,
+                                scaffoldState = scaffoldState,
+                                viewModel = viewModel
                             )
                         }
                     },
@@ -86,9 +83,17 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 GameHintList(listOfDescriptions)
                             }
-                            WinDialogWindow(winDialog, buttonState, guessNumber, ssn)
-                            LostDialogWindow(lostDialog, buttonState, guessNumber, ssn)
-                            HowToPlayDialogWindow(howToPlayDialogWindow)
+                            WinDialogWindow(
+                                winDialog = winDialog,
+                                viewModel = viewModel
+                            )
+                            LostDialogWindow(
+                                lostDialog = lostDialog,
+                                viewModel = viewModel
+                            )
+                            HowToPlayDialogWindow(
+                                dialogOpen = howToPlayDialogWindow,
+                                viewModel = viewModel)
                             Spacer(modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 16.dp))
                             Divider(
                                 color = gray,
@@ -97,16 +102,15 @@ class MainActivity : ComponentActivity() {
                                     .width(1.dp),
                             )
                             Spacer(modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 8.dp))
-                            CodeLine(boxBorderColors, guessNumber, buttonState, ssn)
+                            CodeLine(
+                                boxBorderColors = boxBorderColors,
+                                guessNumber = guessNumber,
+                                viewModel = viewModel
+                            )
                             Spacer(modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 8.dp))
                             InputNumbers(
-                                ssn,
-                                buttonState,
-                                boxBorderColors,
-                                guessNumber,
-                                listOfDescriptions,
-                                winDialog,
-                                lostDialog
+                                buttonState = buttonState,
+                                viewModel = viewModel
                             )
                             Spacer(modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 16.dp))
                             DefaultSnackbar(

@@ -1,7 +1,6 @@
 package com.braze.fourroosters.ui.components
 
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
@@ -12,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -22,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.braze.fourroosters.R
+import com.braze.fourroosters.domain.UIEvent
 import com.braze.fourroosters.ui.MainActivityViewModel
 import com.braze.fourroosters.ui.theme.shadyWhite
 
@@ -29,19 +28,17 @@ import com.braze.fourroosters.ui.theme.shadyWhite
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun WinDialogWindow(
-    dialog: MutableState<Boolean>,
-    buttonState: MutableState<Array<Boolean>>,
-    guessNumber: MutableState<Array<String>>,
-    secretNumber: MutableState<Array<String?>>,
-    primaryColor: Color = Color(0xFF35898F),
-    context: Context = LocalContext.current.applicationContext
+    winDialog: Boolean,
+    viewModel: MainActivityViewModel
 ) {
-    if (dialog.value) {
+    val primaryColor = Color(0xFF35898F)
+
+    if (winDialog) {
 
         Dialog(
             onDismissRequest = {
-//                dialogOpen = false
-                dialog.value = false
+
+                viewModel.onEvent(UIEvent.ShowLostDialog(false))
             },
             properties = DialogProperties(
                 usePlatformDefaultWidth = false // experimental
@@ -98,13 +95,7 @@ fun WinDialogWindow(
                 ) {
                     Button(
                         onClick = {
-//                            dialogOpen = false
-                            MainActivityViewModel().onTheGameEnds(
-                                buttonState,
-                                guessNumber,
-                                secretNumber
-                            )
-                            dialog.value = false
+                            viewModel.onEvent(UIEvent.EndOfTheGame)
                         },
                         modifier = Modifier.padding(top = 20.dp),
                         shape = RoundedCornerShape(percent = 25)
@@ -124,6 +115,4 @@ fun WinDialogWindow(
             }
         }
     }
-
-
 }
