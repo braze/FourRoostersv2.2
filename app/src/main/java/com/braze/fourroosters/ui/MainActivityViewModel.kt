@@ -104,7 +104,7 @@ class MainActivityViewModel : ViewModel() {
             game.generateSecretNumber()
         }
         val (description, isWon) = game.checkNumber(guessNumber.value)
-        listOfDescriptions.value.plus(description.toString())
+        listOfDescriptions.value = listOfDescriptions.value.plus(description.toString())
         winDialog.value = isWon as Boolean
 
         // check if player lost
@@ -213,7 +213,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     private fun newGame() {
-        listOfDescriptions.value = arrayListOf()
+        listOfDescriptions.value = listOf()
         game.generateSecretNumber()
         guessNumber.value = arrayOf("X", "X", "X", "X")
         boxBorderColors.value = arrayOf(PASSIVE, PASSIVE, PASSIVE, PASSIVE)

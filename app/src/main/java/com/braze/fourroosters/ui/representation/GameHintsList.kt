@@ -16,8 +16,7 @@ import kotlinx.coroutines.*
 @Composable
 fun GameHintList(listOfDescriptions: List<String>) {
     val listState = rememberLazyListState()
-//    val coroutineScope = CoroutineScope(Job() + Dispatchers.Main)
-    val coroutineScope = rememberCoroutineScope()
+
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -28,15 +27,10 @@ fun GameHintList(listOfDescriptions: List<String>) {
             items = listOfDescriptions
         ) { index, description ->
             HintCard(index + 1, description)
-
-            //remember list position
-//            coroutineScope.launch {
-//                listState.animateScrollToItem(
-//                    // TODO: check this out
-//                    listOfDescriptions.size - 1,
-//                    listState.firstVisibleItemScrollOffset
-//                )
-//            }
+            // remember position of the description list
+            LaunchedEffect("") {
+                listState.scrollToItem(index, 0)
+            }
         }
     }
 }
