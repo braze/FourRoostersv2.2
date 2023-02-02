@@ -22,7 +22,7 @@ class MainActivityViewModel : ViewModel() {
     val howToPlayDialogWindow: MutableState<Boolean> = mutableStateOf(false)
 
     fun onEvent(event: UIEvent) {
-        when(event) {
+        when (event) {
             is UIEvent.ShowHowToPlayDialog -> {
                 howToPlayDialogWindow.value = event.wantToShow
             }
@@ -228,6 +228,6 @@ class MainActivityViewModel : ViewModel() {
             false, false, false, false, false, false, false, false, false, false, false, false
         )
         buttonState.value = list
-        guessNumber.value = game.getSecretNumber(listOfDescriptions.value.size)
+        guessNumber.value = game.getSecretNumber()
     }
 }

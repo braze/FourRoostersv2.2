@@ -47,7 +47,7 @@ class Game {
         val winDialog: Boolean
         if (secretNumber.contentEquals(guessNumber)) {
             // WIN !!!! CONGRATULATIONS!!!
-            description = getDescription(guessNumber,4, 0)
+            description = getDescription(guessNumber, 4, 0)
             winDialog = true
         } else {
             var rooster = 0
@@ -98,22 +98,15 @@ class Game {
                 guessNumber[3]
     }
 
-    fun isSecretNumberNotReady() : Boolean {
+    fun isSecretNumberNotReady(): Boolean {
         return secretNumber.contains(null)
     }
 
-    fun getSecretNumber(attempts: Int): Array<String> {
-        if (attempts >= 10) {
-                    val one =
-            if (secretNumber[0] != null) secretNumber[0].toString() else "X"
-        val two =
-            if (secretNumber[1] != null) secretNumber[1].toString() else "X"
-        val three =
-            if (secretNumber[2] != null) secretNumber[2].toString() else "X"
-        val four =
-            if (secretNumber[3] != null) secretNumber[3].toString() else "X"
+    fun getSecretNumber(): Array<String> {
+        val one = if (secretNumber[0] != null) secretNumber[0].toString() else "X"
+        val two = if (secretNumber[1] != null) secretNumber[1].toString() else "X"
+        val three = if (secretNumber[2] != null) secretNumber[2].toString() else "X"
+        val four = if (secretNumber[3] != null) secretNumber[3].toString() else "X"
         return arrayOf(one, two, three, four)
-        }
-        return arrayOf("X", "X", "X", "X")
     }
 }

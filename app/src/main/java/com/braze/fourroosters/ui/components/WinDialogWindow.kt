@@ -37,7 +37,6 @@ fun WinDialogWindow(
 
         Dialog(
             onDismissRequest = {
-
                 viewModel.onEvent(UIEvent.ShowLostDialog(false))
             },
             properties = DialogProperties(
