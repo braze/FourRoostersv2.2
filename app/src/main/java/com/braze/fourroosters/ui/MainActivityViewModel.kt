@@ -108,8 +108,10 @@ class MainActivityViewModel : ViewModel() {
         winDialog.value = isWon as Boolean
 
         // check if player lost
-        if (listOfDescriptions.value.size == 10) {
-            lostDialog.value = true
+        if (!winDialog.value) {
+            if (listOfDescriptions.value.size == 10) {
+                lostDialog.value = true
+            }
         }
         resetViews()
     }
